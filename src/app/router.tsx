@@ -36,7 +36,7 @@ const children: RouteObject[] = routeDefinitions.map((route) => {
 
   return route.path === '/'
     ? { index: true, element, handle }
-    : { path: route.path.replace(/^\\//, ''), element, handle };
+    : { path: route.path.replace(/^\//, ''), element, handle };
 });
 
 const router = createBrowserRouter(
@@ -44,7 +44,7 @@ const router = createBrowserRouter(
     path: '/',
     element: <AppLayout />,
     errorElement: <RouteErrorPage />,
-    children: [...children, { path: '*', element: <NotFoundPage /> }],
+    children: [...children, { path: '*', element: <Suspense fallback={<div className="routeLoading"><Spin size="large" /></div>}><NotFoundPage /></Suspense> }],
   }],
   { basename: env.basePath === '/' ? undefined : env.basePath },
 );
