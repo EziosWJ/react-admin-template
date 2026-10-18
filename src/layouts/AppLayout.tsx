@@ -9,7 +9,6 @@ import {
   Space,
   Tabs,
   Tooltip,
-  Typography,
   type MenuProps,
 } from 'antd';
 import {
@@ -25,6 +24,7 @@ import {
   findRouteDefinition,
   getActiveMenuPath,
   getBreadcrumbs,
+  getPageTitle,
   getTabKey,
   getTabLabel,
 } from '../config/routeUtils';
@@ -78,9 +78,10 @@ export default function AppLayout() {
   const { themeMode, toggleTheme } = useAppPreferences();
   const [collapsed, setCollapsed] = useState(() => {
     try {
-      return window.localStorage.getItem(COLLAPSE_STORAGE_KEY) === 'true';
+      const stored = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
+      return stored !== null ? stored === 'true' : window.innerWidth < 1200;
     } catch {
-      return false;
+      return window.innerWidth < 1200;
     }
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -92,6 +93,7 @@ export default function AppLayout() {
   const activeMenuPath = getActiveMenuPath(location.pathname);
   const tabKey = getTabKey(location.pathname);
   const tabLabel = getTabLabel(location.pathname);
+  const pageTitle = getPageTitle(location.pathname);
   const hasKnownRoute = Boolean(findRouteDefinition(location.pathname));
   const breadcrumbs = getBreadcrumbs(location.pathname);
   const menuItems = useMemo(buildMenuItems, []);
@@ -127,8 +129,8 @@ export default function AppLayout() {
   }, [hasKnownRoute, location.pathname, location.search, openTab, tabKey, tabLabel]);
 
   useEffect(() => {
-    document.title = `${hasKnownRoute ? tabLabel : '页面未找到'} · ${appConfig.name}`;
-  }, [hasKnownRoute, tabLabel]);
+    document.title = `${pageTitle} · ${appConfig.brandName}`;
+  }, [pageTitle]);
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     navigate(key);
@@ -165,6 +167,8 @@ export default function AppLayout() {
         type="text"
         size="small"
         aria-label={collapsed ? '展开侧边栏' : '折叠侧边栏'}
+        aria-expanded={!collapsed}
+        aria-controls="app-sider"
         icon={collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
         onClick={() => setCollapsed((value) => !value)}
       />
@@ -175,7 +179,8 @@ export default function AppLayout() {
     <Layout className={styles.shell}>
       {!isMobile && (
         <Sider
-          width={248}
+          id="app-sider"
+          width={260}
           collapsedWidth={76}
           collapsible
           collapsed={collapsed}
@@ -184,9 +189,16 @@ export default function AppLayout() {
           className={styles.sider}
           trigger={null}
         >
-          <div className={styles.brand}>
+          <div className={`${styles.brand} ${collapsed ? styles.brandCollapsed : ''}`}>
             <span className={styles.brandMark}>{appConfig.logoText}</span>
-            {!collapsed && <span className={styles.brandName}>{appConfig.name}</span>}
+            {!collapsed && (
+              <div className={styles.brandText}>
+                <span className={styles.brandName} title={appConfig.brandName}>
+                  {appConfig.brandName}
+                </span>
+                <span className={styles.brandSubtitle}>{appConfig.brandSubtitle}</span>
+              </div>
+            )}
             {!collapsed && collapseButton}
           </div>
           {collapsed && <div className={styles.collapsedToggle}>{collapseButton}</div>}
@@ -200,19 +212,22 @@ export default function AppLayout() {
           <header className={styles.header}>
             <div className={styles.heading}>
               {isMobile && (
-                <Button
-                  type="text"
-                  aria-label="打开导航菜单"
-                  icon={<MenuIcon size={20} />}
-                  onClick={() => setMobileMenuOpen(true)}
-                />
+                <Tooltip title="打开导航菜单">
+                  <Button
+                    type="text"
+                    className={styles.headerIconButton}
+                    aria-label="打开导航菜单"
+                    aria-expanded={mobileMenuOpen}
+                    icon={<MenuIcon size={20} />}
+                    onClick={() => setMobileMenuOpen(true)}
+                  />
+                </Tooltip>
               )}
-              {isMobile && <span className={styles.mobileBrandMark}>{appConfig.logoText}</span>}
               <Breadcrumb
                 className={styles.breadcrumb}
-                items={breadcrumbs.map((item, index) => ({
+                items={(isMobile ? breadcrumbs.slice(-1) : breadcrumbs).map((item, index, list) => ({
                   title:
-                    item.href && index < breadcrumbs.length - 1 ? (
+                    item.href && index < list.length - 1 ? (
                       <Link to={item.href}>{item.label}</Link>
                     ) : (
                       item.label
@@ -224,6 +239,7 @@ export default function AppLayout() {
               <Tooltip title={themeMode === 'dark' ? '切换浅色主题' : '切换深色主题'}>
                 <Button
                   type="text"
+                  className={styles.headerIconButton}
                   aria-label={themeMode === 'dark' ? '切换浅色主题' : '切换深色主题'}
                   icon={themeMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                   onClick={toggleTheme}
@@ -237,9 +253,10 @@ export default function AppLayout() {
               type="editable-card"
               hideAdd
               size="small"
+              tabBarGutter={8}
               activeKey={tabKey}
               onChange={(key) => {
-                const tab = tabs.find((item) => item.key === key);
+                const tab = displayTabs.find((item) => item.key === key);
                 if (tab) navigate(tab.href);
               }}
               onEdit={(targetKey, action) => {
@@ -253,9 +270,6 @@ export default function AppLayout() {
               className={styles.tabs}
               aria-label="已打开的页面"
             />
-            <Typography.Text type="secondary" className={styles.tabHint}>
-              页面标签保存在当前浏览器会话中
-            </Typography.Text>
           </div>
         </div>
 

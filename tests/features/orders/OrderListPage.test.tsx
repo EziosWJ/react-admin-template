@@ -26,6 +26,8 @@ describe('OrderListPage', () => {
     expect((await screen.findAllByText(/^SO-\d{4}-\d{4}$/, {}, { timeout: 20_000 })).length).toBeGreaterThan(0);
 
     await chooseSelectOption(user, document, '按订单状态筛选', '待处理');
+    expect(screen.getByTestId('location').textContent).not.toContain('status=pending');
+    await user.click(screen.getByRole('button', { name: '查询' }));
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toContain('status=pending');
     });
@@ -47,6 +49,7 @@ describe('OrderListPage', () => {
     expect(await screen.findByText('订单创建成功', {}, { timeout: 20_000 })).toBeInTheDocument();
 
     setFieldValue('搜索订单', '星云科技');
+    await user.click(screen.getByRole('button', { name: '查询' }));
     expect(await screen.findByText('¥54,321.00', {}, { timeout: 20_000 })).toBeInTheDocument();
   });
 });

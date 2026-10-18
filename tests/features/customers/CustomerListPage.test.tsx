@@ -49,12 +49,14 @@ describe('CustomerListPage', () => {
     expect(screen.getAllByText(/共 24 条/).length).toBeGreaterThan(0);
 
     setFieldValue('搜索客户', '星云');
+    expect(screen.queryByText('星云科技')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '查询' }));
     expect(await screen.findByText('星云科技', {}, { timeout: 20_000 })).toBeInTheDocument();
     await waitFor(() => {
       expect(decodeURIComponent(screen.getByTestId('location').textContent ?? '')).toContain('q=星云');
     });
 
-    await user.click(screen.getByRole('button', { name: '重置筛选' }));
+    await user.click(screen.getByRole('button', { name: '重置' }));
     await waitFor(() => {
       expect(screen.getByLabelText('搜索客户')).toHaveValue('');
       expect(screen.getByTestId('location').textContent).toBe('/customers');
@@ -74,6 +76,8 @@ describe('CustomerListPage', () => {
     await screen.findByText('明德人力', {}, { timeout: 20_000 });
 
     await chooseOption(user, document, '按客户状态筛选', '合作中');
+    expect(screen.getByTestId('location').textContent).not.toContain('status=active');
+    await user.click(screen.getByRole('button', { name: '查询' }));
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toContain('status=active');
     });
@@ -106,6 +110,7 @@ describe('CustomerListPage', () => {
 
     expect(await screen.findByText('客户创建成功', {}, { timeout: 20_000 })).toBeInTheDocument();
     setFieldValue('搜索客户', '自动化测试客户');
+    await user.click(screen.getByRole('button', { name: '查询' }));
     expect(await screen.findByText('自动化测试客户', {}, { timeout: 20_000 })).toBeInTheDocument();
   });
 });

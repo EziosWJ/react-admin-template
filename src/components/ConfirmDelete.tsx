@@ -47,8 +47,8 @@ export function ConfirmDelete({
   return (
     <Button
       danger
-      type="text"
-      size="small"
+      type="default"
+      size="middle"
       icon={<Trash2 size={15} aria-hidden="true" />}
       onClick={handleClick}
       {...buttonProps}

@@ -8,6 +8,8 @@ import { HOME_TAB, useTabsStore } from '../../src/stores/useTabsStore';
 import { createTestQueryClient } from '../utils/renderWithProviders';
 
 function setViewport(width: number) {
+  Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: width });
+  Object.defineProperty(window, 'outerWidth', { writable: true, configurable: true, value: width });
   vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => {
     const min = /min-width:\s*(\d+(?:\.\d+)?)px/.exec(query);
     const max = /max-width:\s*(\d+(?:\.\d+)?)px/.exec(query);

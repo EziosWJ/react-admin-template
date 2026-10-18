@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Alert, Card, Col, Empty, Row, Segmented, Space, Typography } from 'antd';
-import { BriefcaseBusiness, ClipboardList, Users, UserRoundCog } from 'lucide-react';
+import { Card, Col, Empty, Row, Segmented, Space, Typography } from 'antd';
+import { BriefcaseBusiness, ClipboardList, Info, Users, UserRoundCog } from 'lucide-react';
 import { Line, Pie } from '@ant-design/charts';
 import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
@@ -71,7 +71,7 @@ export default function DashboardPage() {
       height: 290,
       theme: themeMode === 'dark' ? 'classicDark' : 'classic',
       axis: {
-        x: { labelAutoHide: true, title: false },
+        x: { tickCount: 6, labelAutoHide: true, labelAutoRotate: false, labelAutoEllipsis: true, title: false },
         y: { title: false, labelFormatter: (value: number) => formatCurrency(value, 0) },
       },
       tooltip: { items: [{ channel: 'y' as const, name: '订单金额' }] },
@@ -85,7 +85,7 @@ export default function DashboardPage() {
     <div className="pageStack">
       <PageHeader
         title="经营总览"
-        description="关键指标与图表均来自统一的模拟 API，与客户、项目、订单、用户列表共用同一份内存数据。"
+        description="关键指标、项目状态与订单趋势的一站式概览。"
         extra={
           <Space wrap>
             <Typography.Text type="secondary">图表统计范围</Typography.Text>
@@ -146,12 +146,13 @@ export default function DashboardPage() {
               </Col>
             </Row>
 
-            <Alert
-              type="info"
-              showIcon
-              title={`当前图表统计范围：${summary.rangeLabel}（${formatDate(summary.from)} 至 ${formatDate(summary.to)}）`}
-              description="上方指标卡片展示全量数据；切换时间范围会同步更新下方图表。点击指标卡片可跳转到对应列表。"
-            />
+            <div className={styles.scopeNote}>
+              <Info size={15} aria-hidden="true" />
+              <span>
+                指标卡片展示全量数据；图表按 {summary.rangeLabel}（{formatDate(summary.from)} 至{' '}
+                {formatDate(summary.to)}）统计，点击指标可进入对应列表。
+              </span>
+            </div>
 
             <Row gutter={[16, 16]}>
               <Col xs={24} xl={10}>

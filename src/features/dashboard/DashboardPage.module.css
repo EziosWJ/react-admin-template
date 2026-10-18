@@ -1,6 +1,6 @@
-.chartCard { height: 100%; border-radius: 14px; }
+.chartCard { height: 100%; border-radius: 16px; }
 .chartEmpty { margin: 48px 0; }
-.chartNote { margin: 4px 0 0 !important; font-size: 12px; }
+.chartNote { margin: 4px 0 0 !important; color: var(--ant-color-text-tertiary); font-size: 12px; }
 .pieLegend {
   display: flex;
   flex-wrap: wrap;
@@ -9,3 +9,15 @@
   padding: 0 8px 6px;
 }
 .pieLegendItem { display: inline-flex; align-items: center; gap: 6px; }
+.scopeNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--ant-color-border-secondary, #e9eef6);
+  border-radius: 12px;
+  color: var(--ant-color-text-secondary, #64748b);
+  background: var(--ant-color-fill-quaternary, #f8fafc);
+  font-size: 13px;
+  line-height: 20px;
+}

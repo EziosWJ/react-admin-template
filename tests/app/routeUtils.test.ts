@@ -59,7 +59,7 @@ describe('route metadata utilities', () => {
     expect(getActiveMenuPath('/users')).toBe('/users');
     expect(getActiveMenuPath('/unknown')).toBe('/');
     expect(getTabLabel('/orders/o-001')).toBe('订单详情');
-    expect(getTabLabel('/unknown')).toBe('页面');
+    expect(getTabLabel('/unknown')).toBe('页面未找到');
     expect(getTabKey('/customers/')).toBe('/customers');
     expect(getTabKey('/')).toBe('/');
   });

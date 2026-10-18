@@ -1,0 +1,15 @@
+.actions { flex-wrap: nowrap; }
+.detailLink {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--ant-color-primary, #1677ff);
+  font-size: 13px;
+  text-decoration: none;
+  transition: background .2s ease, color .2s ease;
+}
+.detailLink:hover { background: var(--ant-color-primary-bg, #e6f4ff); color: var(--ant-color-primary-hover, #4096ff); }
+.moreButton { color: var(--ant-color-text-secondary, #64748b); }
+.moreButton:hover { color: var(--ant-color-primary, #1677ff) !important; background: var(--ant-color-fill-quaternary, #f1f5f9) !important; }

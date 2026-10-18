@@ -1,5 +1,7 @@
 export const appConfig = Object.freeze({
   name: 'React Admin Template',
+  brandName: 'React Admin',
+  brandSubtitle: '企业管理后台',
   shortName: 'RA',
   description: '面向企业业务系统的侧边栏管理后台脚手架',
   logoText: 'RA',

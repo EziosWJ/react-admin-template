@@ -79,38 +79,81 @@ export function AppProviders({ children, client = defaultQueryClient }: AppProvi
 
   const preferences = useMemo(() => ({ themeMode, toggleTheme }), [themeMode, toggleTheme]);
 
-  const themeConfig: ThemeConfig = useMemo(
-    () => ({
-      algorithm: themeMode === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+  const themeConfig: ThemeConfig = useMemo(() => {
+    const dark = themeMode === 'dark';
+    return {
+      algorithm: dark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
       cssVar: { prefix: 'ant' },
       token: {
         colorPrimary: appConfig.brandColor,
-        borderRadius: 8,
+        colorInfo: appConfig.brandColor,
+        colorLink: appConfig.brandColor,
+        borderRadius: 10,
+        borderRadiusLG: 16,
+        borderRadiusSM: 8,
+        controlHeight: 36,
+        controlHeightSM: 30,
+        controlHeightLG: 42,
+        fontSize: 14,
+        colorBgLayout: dark ? '#0a101c' : '#f5f7fb',
+        colorBgContainer: dark ? '#0f172a' : '#ffffff',
+        colorBorderSecondary: dark ? '#1e293b' : '#e9eef6',
         fontFamily:
           'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif',
-        colorBgLayout: themeMode === 'dark' ? '#0b1220' : '#f4f7fb',
       },
       components: {
         Layout: {
-          headerBg: themeMode === 'dark' ? '#111827' : '#ffffff',
-          siderBg: themeMode === 'dark' ? '#0f172a' : '#ffffff',
-          bodyBg: themeMode === 'dark' ? '#0b1220' : '#f4f7fb',
+          headerBg: dark ? '#0f172a' : '#ffffff',
+          siderBg: dark ? '#0b1424' : '#ffffff',
+          bodyBg: dark ? '#0a101c' : '#f5f7fb',
           footerBg: 'transparent',
         },
         Menu: {
+          itemHeight: 40,
           itemBorderRadius: 8,
-          itemMarginInline: 8,
+          itemMarginInline: 6,
+          itemSelectedBg: dark ? '#17263f' : '#eaf2ff',
+          itemSelectedColor: appConfig.brandColor,
+          groupTitleFontSize: 11,
+          groupTitleColor: dark ? '#7c8aa5' : '#8a94a6',
         },
         Table: {
-          headerBg: themeMode === 'dark' ? '#141d2e' : '#f7f9fc',
+          headerBg: dark ? '#111c2d' : '#f8fafc',
+          headerColor: dark ? '#9fb0c8' : '#64748b',
+          rowHoverBg: dark ? '#142033' : '#f8fbff',
+          borderColor: dark ? '#1e293b' : '#eef2f7',
+          headerBorderRadius: 0,
+          cellPaddingBlockMD: 12,
+          cellPaddingInlineMD: 16,
         },
         Card: {
-          borderRadiusLG: 14,
+          borderRadiusLG: 16,
+          bodyPadding: 20,
+          headerPadding: 20,
+          headerFontSize: 15,
+        },
+        Tabs: {
+          cardGutter: 6,
+          cardPadding: '4px 10px',
+          cardPaddingSM: '3px 8px',
+          cardBg: 'transparent',
+          itemSelectedColor: appConfig.brandColor,
+        },
+        Button: {
+          fontWeight: 500,
+          borderRadius: 8,
+        },
+        Input: {
+          activeBorderColor: appConfig.brandColor,
+          hoverBorderColor: dark ? '#334155' : '#cbd5e1',
+        },
+        Select: {
+          optionHeight: 34,
+          optionSelectedBg: dark ? '#17263f' : '#eaf2ff',
         },
       },
-    }),
-    [themeMode],
-  );
+    };
+  }, [themeMode]);
 
   return (
     <PreferencesContext.Provider value={preferences}>

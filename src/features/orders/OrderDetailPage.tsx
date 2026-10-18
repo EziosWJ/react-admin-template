@@ -65,6 +65,7 @@ export default function OrderDetailPage() {
           order && (
             <Space wrap>
               <Button
+                type="primary"
                 icon={<Pencil size={15} aria-hidden="true" />}
                 onClick={() => navigate(paths.orderEdit(order.id))}
               >

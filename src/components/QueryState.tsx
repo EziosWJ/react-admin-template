@@ -29,33 +29,41 @@ export function QueryState({
 }: QueryStateProps) {
   if (isLoading) {
     return (
-      <div className={styles.loading} aria-live="polite" aria-busy="true">
+      <div className={styles.panel} aria-live="polite" aria-busy="true">
         <Skeleton active title={false} paragraph={{ rows: skeletonRows }} />
       </div>
     );
   }
   if (isError) {
     return (
-      <Result
-        status="error"
-        icon={<TriangleAlert size={52} aria-hidden="true" />}
-        title="数据加载失败"
-        subTitle={getApiErrorMessage(error)}
-        extra={
-          onRetry && (
-            <Button type="primary" icon={<RefreshCw size={15} aria-hidden="true" />} onClick={onRetry}>
-              重新加载
-            </Button>
-          )
-        }
-      />
+      <div className={styles.panel}>
+        <Result
+          status="error"
+          icon={<TriangleAlert size={44} aria-hidden="true" />}
+          title="数据加载失败"
+          subTitle={getApiErrorMessage(error)}
+          extra={
+            onRetry && (
+              <Button type="primary" icon={<RefreshCw size={15} aria-hidden="true" />} onClick={onRetry}>
+                重新加载
+              </Button>
+            )
+          }
+        />
+      </div>
     );
   }
   if (isEmpty) {
     return (
-      <Empty className={styles.empty} description={emptyDescription}>
-        {emptyExtra}
-      </Empty>
+      <div className={styles.panel}>
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          className={styles.empty}
+          description={emptyDescription}
+        >
+          {emptyExtra}
+        </Empty>
+      </div>
     );
   }
   return <>{children}</>;

@@ -9,7 +9,8 @@ configure({ asyncUtilTimeout: 15_000 });
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
-    matches: false,
+    // jsdom 无真实布局能力：默认按桌面宽度响应 min-width 断点，使响应式列/组件按桌面形态渲染。
+    matches: /min-width/.test(query),
     media: query,
     onchange: null,
     addListener: vi.fn(),

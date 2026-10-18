@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button, Space, Typography } from 'antd';
+import { Button, Space, Tooltip, Typography } from 'antd';
 import { ArrowLeft } from 'lucide-react';
 import styles from './PageHeader.module.css';
 
@@ -16,21 +16,24 @@ export function PageHeader({ title, description, extra, onBack, backLabel = '返
   return (
     <header className={styles.header}>
       <div className={styles.heading}>
-        {onBack && (
-          <Button
-            type="text"
-            size="small"
-            className={styles.back}
-            icon={<ArrowLeft size={16} aria-hidden="true" />}
-            onClick={onBack}
-          >
-            {backLabel}
-          </Button>
-        )}
-        <Typography.Title level={3} className={styles.title}>
-          {title}
-        </Typography.Title>
-        {meta}
+        <div className={styles.titleRow}>
+          {onBack && (
+            <Tooltip title={backLabel}>
+              <Button
+                type="text"
+                size="small"
+                className={styles.back}
+                aria-label={backLabel}
+                icon={<ArrowLeft size={17} aria-hidden="true" />}
+                onClick={onBack}
+              />
+            </Tooltip>
+          )}
+          <Typography.Title level={3} className={styles.title}>
+            {title}
+          </Typography.Title>
+          {meta}
+        </div>
         {description && (
           <Typography.Paragraph type="secondary" className={styles.description}>
             {description}

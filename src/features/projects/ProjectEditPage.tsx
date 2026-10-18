@@ -70,10 +70,10 @@ export default function ProjectEditPage() {
         skeletonRows={8}
       >
         {project && (
-          <Card variant="outlined">
+          <Card variant="outlined" title="基本信息" className="formCard">
             <Form<ProjectFormValues> form={form} layout="vertical" onFinish={handleFinish} scrollToFirstError>
               <ProjectFormFields />
-              <Space>
+              <Space className="formActions">
                 <Button onClick={() => navigate(paths.projectDetail(project.id))} disabled={submitting}>
                   取消
                 </Button>

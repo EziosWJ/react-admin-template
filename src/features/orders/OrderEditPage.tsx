@@ -62,10 +62,10 @@ export default function OrderEditPage() {
         skeletonRows={8}
       >
         {order && (
-          <Card variant="outlined">
+          <Card variant="outlined" title="基本信息" className="formCard">
             <Form<OrderFormValues> form={form} layout="vertical" onFinish={handleFinish} scrollToFirstError>
               <OrderFormFields />
-              <Space>
+              <Space className="formActions">
                 <Button onClick={() => navigate(paths.orderDetail(order.id))} disabled={submitting}>
                   取消
                 </Button>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Descriptions } from 'antd';
+import styles from './DetailFields.module.css';
 
 export interface DetailItem {
   key: string;
@@ -20,6 +21,7 @@ export function DetailFields({ items, column = { xs: 1, sm: 2, xl: 3 }, size = '
       bordered
       size={size}
       column={column}
+      className={styles.descriptions}
       items={items.map((item) => ({
         key: item.key,
         label: item.label,

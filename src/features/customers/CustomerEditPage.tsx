@@ -62,10 +62,10 @@ export default function CustomerEditPage() {
         skeletonRows={8}
       >
         {customer && (
-          <Card variant="outlined">
+          <Card variant="outlined" title="基本信息" className="formCard">
             <Form<CustomerFormValues> form={form} layout="vertical" onFinish={handleFinish} scrollToFirstError>
               <CustomerFormFields />
-              <Space>
+              <Space className="formActions">
                 <Button onClick={() => navigate(paths.customerDetail(customer.id))} disabled={submitting}>
                   取消
                 </Button>

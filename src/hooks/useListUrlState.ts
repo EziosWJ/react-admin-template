@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { SortOrder } from '../types/api';
 import {
@@ -8,13 +8,13 @@ import {
   type ListUrlConfig,
   type ParsedListState,
 } from '../utils/listQuery';
-import { useDebouncedValue } from './useDebouncedValue';
 
 export interface ListUrlActions {
   setPage: (page: number, pageSize?: number) => void;
   setKeyword: (keyword: string, replace?: boolean) => void;
   setFilter: (key: string, value: string | undefined) => void;
   setFilters: (values: Record<string, string | undefined>) => void;
+  applyFilters: (keyword: string, filters: Record<string, string | undefined>) => void;
   setSort: (sortBy: string | undefined, sortOrder?: SortOrder) => void;
   reset: () => void;
 }
@@ -67,6 +67,14 @@ export function useListUrlState(config: ListUrlConfig): {
             else delete draft.filters[key];
           });
         }, { resetPage: true }),
+      applyFilters: (keyword, filters) =>
+        update((draft) => {
+          draft.keyword = keyword.trim().slice(0, 100);
+          draft.filters = {};
+          Object.entries(filters).forEach(([key, value]) => {
+            if (value) draft.filters[key] = value;
+          });
+        }, { resetPage: true }),
       setSort: (sortBy, sortOrder) =>
         update((draft) => {
           draft.sortBy = sortBy;
@@ -78,36 +86,4 @@ export function useListUrlState(config: ListUrlConfig): {
   );
 
   return { state, actions };
-}
-
-export function useSyncedKeyword(
-  urlKeyword: string,
-  commit: (keyword: string, replace?: boolean) => void,
-  delay = 400,
-): {
-  keyword: string;
-  setKeyword: (value: string) => void;
-  clearKeyword: () => void;
-} {
-  const [keyword, setKeyword] = useState(urlKeyword);
-  const debounced = useDebouncedValue(keyword, delay);
-
-  useEffect(() => {
-    // 只提交用户停止输入后的稳定值，避免重置筛选时把旧的防抖值写回 URL。
-    if (keyword !== debounced || debounced === urlKeyword) return;
-    commit(debounced, true);
-  }, [commit, debounced, keyword, urlKeyword]);
-
-  useEffect(() => {
-    setKeyword(urlKeyword);
-  }, [urlKeyword]);
-
-  return {
-    keyword,
-    setKeyword,
-    clearKeyword: () => {
-      setKeyword('');
-      if (urlKeyword) commit('', true);
-    },
-  };
 }

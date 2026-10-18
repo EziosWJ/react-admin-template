@@ -60,7 +60,7 @@ interface DataTableProps<T extends object> {
   onRefresh?: () => void;
   refreshing?: boolean;
   emptyDescription?: ReactNode;
-  scrollX?: number;
+  scrollX?: number | 'max-content';
   size?: TableProps<T>['size'];
 }
 
@@ -86,7 +86,7 @@ export function DataTable<T extends object>({
   onRefresh,
   refreshing = false,
   emptyDescription = '暂无符合条件的数据',
-  scrollX = 1080,
+  scrollX = 'max-content',
   size,
 }: DataTableProps<T>) {
   const [preferences, setPreferences] = useState<TablePreferences>(() => loadTablePreferences(tableKey));
@@ -121,10 +121,12 @@ export function DataTable<T extends object>({
 
   const columnDescriptors = useMemo(
     () =>
-      columns.map((column, index) => ({
-        key: columnKeyOf(column as TableColumnsType<unknown>[number], index),
-        title: column.title,
-      })),
+      columns
+        .map((column, index) => ({
+          key: columnKeyOf(column as TableColumnsType<unknown>[number], index),
+          title: column.title,
+        }))
+        .filter((item) => item.key !== 'actions'),
     [columns],
   );
 
@@ -238,44 +240,63 @@ export function DataTable<T extends object>({
     <Card variant="outlined" className={styles.card} styles={{ body: { padding: 0 } }}>
       <div className={styles.toolbar}>
         <div className={styles.toolbarTitle}>
-          {title && <Typography.Text strong>{title}</Typography.Text>}
-          {typeof total === 'number' && (
-            <Typography.Text type="secondary" className={styles.total}>
-              共 {total} 条
-            </Typography.Text>
-          )}
+          {title && <span className={styles.title}>{title}</span>}
+          {typeof total === 'number' && <span className={styles.total}>共 {total} 条</span>}
         </div>
-        <Space wrap size={6}>
+        <div className={styles.toolbarActions}>
           {toolbarActions}
-          {onRefresh && (
-            <Tooltip title="刷新列表">
-              <Button
-                aria-label="刷新列表"
-                icon={<RefreshCw size={16} aria-hidden="true" />}
-                loading={refreshing}
-                onClick={onRefresh}
-              />
-            </Tooltip>
-          )}
-          <Dropdown menu={densityMenu} trigger={['click']}>
-            <Tooltip title="表格密度">
-              <Button aria-label="调整表格密度" icon={<Rows3 size={16} aria-hidden="true" />} />
-            </Tooltip>
-          </Dropdown>
-          <Popover content={columnMenu} title="显示列" trigger="click" placement="bottomRight">
-            <Tooltip title="显示列">
-              <Button aria-label="选择显示列" icon={<Columns3 size={16} aria-hidden="true" />} />
-            </Tooltip>
-          </Popover>
-        </Space>
+          {toolbarActions && <span className={styles.toolbarDivider} aria-hidden="true" />}
+          <Space size={2}>
+            {onRefresh && (
+              <Tooltip title="刷新列表">
+                <Button
+                  type="text"
+                  className={styles.iconButton}
+                  aria-label="刷新列表"
+                  icon={<RefreshCw size={16} aria-hidden="true" />}
+                  loading={refreshing}
+                  onClick={onRefresh}
+                />
+              </Tooltip>
+            )}
+            <Dropdown menu={densityMenu} trigger={['click']}>
+              <Tooltip title={`表格密度：${TABLE_DENSITY_LABELS[preferences.density]}`}>
+                <Button
+                  type="text"
+                  className={styles.iconButton}
+                  aria-label="调整表格密度"
+                  icon={<Rows3 size={16} aria-hidden="true" />}
+                />
+              </Tooltip>
+            </Dropdown>
+            <Popover
+              content={columnMenu}
+              title={`列设置（${visibleColumnKeys.length}/${columnDescriptors.length}）`}
+              trigger="click"
+              placement="bottomRight"
+            >
+              <Tooltip title="列设置">
+                <Button
+                  type="text"
+                  className={styles.iconButton}
+                  aria-label="选择显示列"
+                  icon={<Columns3 size={16} aria-hidden="true" />}
+                />
+              </Tooltip>
+            </Popover>
+          </Space>
+        </div>
       </div>
 
       {selectable && selectedValues.length > 0 && (
-        <div className={styles.selectionBar} role="status" aria-live="polite">
+        <div className={styles.selectionBar}>
           <Space wrap size={8}>
-            <Typography.Text>已选择 {selectedValues.length} 项</Typography.Text>
+            <Typography.Text role="status" aria-live="polite">
+              已选择 {selectedValues.length} 项
+            </Typography.Text>
             <Segmented
               size="small"
+              aria-label="选择范围"
               value={preferences.selectionMode}
               onChange={(value) => {
                 const mode = value as SelectionMode;
@@ -289,15 +310,20 @@ export function DataTable<T extends object>({
                 }
               }}
               options={[
-                { label: '仅当前页', value: 'page' },
-                { label: '跨分页', value: 'all' },
+                { label: '本页', value: 'page' },
+                { label: '跨页', value: 'all' },
               ]}
             />
             <Button type="link" size="small" onClick={clearSelection}>
               清除选择
             </Button>
           </Space>
-          <Space wrap>{batchActions?.(selectedValues)}</Space>
+          {batchActions && (
+            <>
+              <span className={styles.batchDivider} aria-hidden="true" />
+              <Space wrap>{batchActions(selectedValues)}</Space>
+            </>
+          )}
         </div>
       )}
 
@@ -317,7 +343,8 @@ export function DataTable<T extends object>({
                 total: total ?? dataSource.length,
                 showSizeChanger: true,
                 pageSizeOptions: ['10', '20', '50', '100'],
-                showTotal: (count) => `共 ${count} 条`,
+                responsive: true,
+                showLessItems: true,
               }
             : false
         }

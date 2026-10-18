@@ -64,10 +64,10 @@ export default function UserEditPage() {
         skeletonRows={8}
       >
         {user && (
-          <Card variant="outlined">
+          <Card variant="outlined" title="基本信息" className="formCard">
             <Form<UserFormValues> form={form} layout="vertical" onFinish={handleFinish} scrollToFirstError>
               <UserFormFields />
-              <Space>
+              <Space className="formActions">
                 <Button onClick={() => navigate(paths.userDetail(user.id))} disabled={submitting}>
                   取消
                 </Button>

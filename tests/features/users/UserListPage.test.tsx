@@ -24,9 +24,11 @@ describe('UserListPage', () => {
     );
 
     expect(await screen.findByText('邓超', {}, { timeout: 20_000 })).toBeInTheDocument();
-    expect(screen.getByText(/不包含登录、认证、密码或权限/)).toBeInTheDocument();
+    expect(screen.getByText(/演示数据不包含登录或权限能力/)).toBeInTheDocument();
 
     await chooseSelectOption(user, document, '按部门筛选', '产品研发部');
+    expect(screen.getByTestId('location').textContent).not.toContain('department=product');
+    await user.click(screen.getByRole('button', { name: '查询' }));
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toContain('department=product');
     });
@@ -49,6 +51,7 @@ describe('UserListPage', () => {
     expect(await screen.findByText('用户创建成功', {}, { timeout: 20_000 })).toBeInTheDocument();
 
     setFieldValue('搜索用户', 'e2euser');
+    await user.click(screen.getByRole('button', { name: '查询' }));
     expect(await screen.findByText('测试用户', {}, { timeout: 20_000 })).toBeInTheDocument();
   });
 
@@ -58,7 +61,8 @@ describe('UserListPage', () => {
     await screen.findByText('邓超', {}, { timeout: 20_000 });
 
     const row = screen.getByText('邓超').closest('tr')!;
-    await user.click(within(row).getByRole('button', { name: '停用' }));
+    await user.click(within(row).getByRole('button', { name: '更多操作：邓超' }));
+    await user.click(await screen.findByRole('menuitem', { name: '停用' }));
     const dialog = await screen.findByRole('dialog');
     const confirm = Array.from(dialog.querySelectorAll('button')).find(
       (element) => element.textContent?.replace(/\s/g, '') === '停用',

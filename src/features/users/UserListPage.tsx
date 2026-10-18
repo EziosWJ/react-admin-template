@@ -1,10 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
 import { App, Button, Input, Select, Space } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Search, Upload } from 'lucide-react';
+import { Ban, CircleCheck, Plus, Search, Trash2, Upload } from 'lucide-react';
 import type { TableColumnsType } from 'antd';
-import { ConfirmDelete } from '../../components/ConfirmDelete';
 import { DataTable } from '../../components/DataTable';
+import { RowActions } from '../../components/RowActions';
 import { ExportMenu } from '../../components/ExportMenu';
 import { FormDrawer } from '../../components/FormDrawer';
 import { ImportDrawer } from '../../components/ImportDrawer';
@@ -19,7 +19,8 @@ import {
   optionLabel,
 } from '../../config/options';
 import { paths } from '../../config/paths';
-import { useListUrlState, useSyncedKeyword } from '../../hooks/useListUrlState';
+import { useListFilterDraft } from '../../hooks/useListFilterDraft';
+import { useListUrlState } from '../../hooks/useListUrlState';
 import { getApiErrorMessage } from '../../lib/api/errors';
 import type { User } from '../../types/models';
 import { formatDateTime } from '../../utils/format';
@@ -39,7 +40,7 @@ export default function UserListPage() {
   const navigate = useNavigate();
   const { message, modal } = App.useApp();
   const { state, actions } = useListUrlState(userListUrlConfig);
-  const { keyword, setKeyword, clearKeyword } = useSyncedKeyword(state.keyword, actions.setKeyword);
+  const draft = useListFilterDraft(state.keyword, state.filters);
   const query = useMemo(() => buildUserQuery(state), [state]);
   const listQuery = useUserList(query);
   const { create, update, remove } = useUserMutations();
@@ -51,6 +52,16 @@ export default function UserListPage() {
 
   const handleSelectionChange = useCallback((rows: User[]) => setSelectedRows(rows), []);
   const closeDrawer = useCallback(() => setDrawer(null), []);
+
+  const handleSearch = () => {
+    const values = draft.submit();
+    actions.applyFilters(values.keyword, values.filters);
+  };
+
+  const handleReset = () => {
+    draft.reset();
+    actions.reset();
+  };
 
   const initialValues = useMemo(() => {
     if (drawer?.mode === 'edit') return toUserFormValues(drawer.user);
@@ -127,17 +138,18 @@ export default function UserListPage() {
       dataIndex: 'name',
       key: 'name',
       sorter: true,
-      width: 120,
+      width: 100,
       render: (value: string, record) => <Link to={paths.userDetail(record.id)}>{value}</Link>,
     },
-    { title: '用户名', dataIndex: 'username', key: 'username', sorter: true, width: 140 },
-    { title: '邮箱', dataIndex: 'email', key: 'email', width: 220, ellipsis: true },
+    { title: '用户名', dataIndex: 'username', key: 'username', sorter: true, width: 120, responsive: ['lg'] },
+    { title: '邮箱', dataIndex: 'email', key: 'email', width: 170, ellipsis: true, responsive: ['xl'] },
     {
       title: '部门',
       dataIndex: 'department',
       key: 'department',
       sorter: true,
-      width: 130,
+      responsive: ['md'],
+      width: 108,
       render: (value: string) => optionLabel(DEPARTMENT_OPTIONS, value),
     },
     {
@@ -145,7 +157,8 @@ export default function UserListPage() {
       dataIndex: 'role',
       key: 'role',
       sorter: true,
-      width: 120,
+      responsive: ['lg'],
+      width: 98,
       render: (value: string) => optionLabel(ROLE_OPTIONS, value),
     },
     {
@@ -153,7 +166,7 @@ export default function UserListPage() {
       dataIndex: 'status',
       key: 'status',
       sorter: true,
-      width: 100,
+      width: 90,
       render: (value: string) => <StatusTag value={value} options={USER_STATUS_OPTIONS} />,
     },
     {
@@ -161,7 +174,8 @@ export default function UserListPage() {
       dataIndex: 'lastLoginAt',
       key: 'lastLoginAt',
       sorter: true,
-      width: 170,
+      responsive: ['xl'],
+      width: 145,
       render: (value: string | null) => formatDateTime(value, '从未登录'),
     },
     {
@@ -169,41 +183,40 @@ export default function UserListPage() {
       dataIndex: 'createdAt',
       key: 'createdAt',
       sorter: true,
-      width: 170,
+      responsive: ['xl'],
+      width: 145,
       render: (value: string) => formatDateTime(value),
     },
     {
       title: '操作',
       key: 'actions',
-      width: 300,
+      width: 112,
       fixed: 'right',
       render: (_value, record) => (
-        <Space size={2} wrap>
-          <Button type="link" size="small" onClick={() => navigate(paths.userDetail(record.id))}>
-            详情
-          </Button>
-          <Button type="link" size="small" onClick={() => setDrawer({ mode: 'edit', user: record })}>
-            快捷编辑
-          </Button>
-          <Button type="link" size="small" onClick={() => navigate(paths.userEdit(record.id))}>
-            完整编辑
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            danger={record.status === 'active'}
-            onClick={() => handleToggleStatus(record)}
-          >
-            {record.status === 'active' ? '停用' : '启用'}
-          </Button>
-          <ConfirmDelete
-            entityName={record.name}
-            onConfirm={async () => {
-              await remove.mutateAsync(record.id);
-              setSelectionVersion((version) => version + 1);
-            }}
-          />
-        </Space>
+        <RowActions
+          detailTo={paths.userDetail(record.id)}
+          entityName={record.name}
+          onQuickEdit={() => setDrawer({ mode: 'edit', user: record })}
+          onFullEdit={() => navigate(paths.userEdit(record.id))}
+          onDelete={async () => {
+            await remove.mutateAsync(record.id);
+            setSelectionVersion((version) => version + 1);
+          }}
+          extraActions={[
+            {
+              key: 'toggle-status',
+              label: record.status === 'active' ? '停用' : '启用',
+              icon:
+                record.status === 'active' ? (
+                  <Ban size={15} aria-hidden="true" />
+                ) : (
+                  <CircleCheck size={15} aria-hidden="true" />
+                ),
+              danger: record.status === 'active',
+              onClick: () => handleToggleStatus(record),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -223,7 +236,7 @@ export default function UserListPage() {
     <div className="pageStack">
       <PageHeader
         title="用户管理"
-        description="维护演示用的业务用户资料（部门、岗位与状态）。本模块不包含登录、认证、密码或权限，所有数据均为前端模拟。"
+        description="维护业务用户的部门、岗位与状态；演示数据不包含登录或权限能力。"
         extra={
           <Button type="primary" icon={<Plus size={16} aria-hidden="true" />} onClick={() => setDrawer({ mode: 'create' })}>
             新建用户
@@ -231,47 +244,38 @@ export default function UserListPage() {
         }
       />
 
-      <SearchFilterBar
-        onReset={() => {
-          clearKeyword();
-          actions.reset();
-        }}
-      >
+      <SearchFilterBar onSubmit={handleSearch} onReset={handleReset} dirty={draft.dirty}>
         <Input
           allowClear
           prefix={<Search size={15} aria-hidden="true" />}
           placeholder="搜索姓名、用户名、邮箱"
           aria-label="搜索用户"
-          style={{ width: 280 }}
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
+          value={draft.keyword}
+          onChange={(event) => draft.setKeyword(event.target.value)}
         />
         <Select
           allowClear
           placeholder="部门"
           aria-label="按部门筛选"
-          style={{ width: 150 }}
-          value={state.filters.department}
+          value={draft.filters.department}
           options={DEPARTMENT_OPTIONS}
-          onChange={(value) => actions.setFilter('department', value)}
+          onChange={(value) => draft.setFilter('department', value)}
         />
         <Select
           allowClear
           placeholder="角色/岗位"
           aria-label="按角色或岗位筛选"
-          style={{ width: 150 }}
-          value={state.filters.role}
+          value={draft.filters.role}
           options={ROLE_OPTIONS}
-          onChange={(value) => actions.setFilter('role', value)}
+          onChange={(value) => draft.setFilter('role', value)}
         />
         <Select
           allowClear
           placeholder="状态"
           aria-label="按用户状态筛选"
-          style={{ width: 120 }}
-          value={state.filters.status}
+          value={draft.filters.status}
           options={USER_STATUS_OPTIONS}
-          onChange={(value) => actions.setFilter('status', value)}
+          onChange={(value) => draft.setFilter('status', value)}
         />
       </SearchFilterBar>
 
@@ -297,7 +301,14 @@ export default function UserListPage() {
           loading={listQuery.isFetching}
           selectable
           batchActions={(rows) => (
-            <Button danger size="small" onClick={handleBatchDelete} disabled={rows.length === 0}>
+            <Button
+              type="primary"
+              danger
+              size="small"
+              icon={<Trash2 size={14} aria-hidden="true" />}
+              onClick={handleBatchDelete}
+              disabled={rows.length === 0}
+            >
               批量删除
             </Button>
           )}
@@ -311,7 +322,6 @@ export default function UserListPage() {
           toolbarActions={toolbarActions}
           onRefresh={() => void listQuery.refetch()}
           refreshing={listQuery.isFetching}
-          scrollX={1560}
           emptyDescription="暂无用户数据，可新建用户或调整筛选条件。"
         />
       </QueryState>

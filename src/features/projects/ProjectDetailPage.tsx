@@ -75,6 +75,7 @@ export default function ProjectDetailPage() {
           project && (
             <Space wrap>
               <Button
+                type="primary"
                 icon={<Pencil size={15} aria-hidden="true" />}
                 onClick={() => navigate(paths.projectEdit(project.id))}
               >

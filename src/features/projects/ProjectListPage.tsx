@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
 import { App, Button, DatePicker, Input, Progress, Select, Space, Typography } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Search, Upload } from 'lucide-react';
+import { Plus, Search, Trash2, Upload } from 'lucide-react';
 import dayjs, { type Dayjs } from 'dayjs';
 import type { TableColumnsType } from 'antd';
-import { ConfirmDelete } from '../../components/ConfirmDelete';
 import { DataTable } from '../../components/DataTable';
+import { RowActions } from '../../components/RowActions';
 import { ExportMenu } from '../../components/ExportMenu';
 import { FormDrawer } from '../../components/FormDrawer';
 import { ImportDrawer } from '../../components/ImportDrawer';
@@ -15,7 +15,8 @@ import { SearchFilterBar } from '../../components/SearchFilterBar';
 import { StatusTag } from '../../components/StatusTag';
 import { PROJECT_STATUS_OPTIONS } from '../../config/options';
 import { paths } from '../../config/paths';
-import { useListUrlState, useSyncedKeyword } from '../../hooks/useListUrlState';
+import { useListFilterDraft } from '../../hooks/useListFilterDraft';
+import { useListUrlState } from '../../hooks/useListUrlState';
 import { getApiErrorMessage } from '../../lib/api/errors';
 import type { Project, ProjectInput } from '../../types/models';
 import { formatCurrency, formatDate } from '../../utils/format';
@@ -41,7 +42,7 @@ export default function ProjectListPage() {
   const navigate = useNavigate();
   const { message, modal } = App.useApp();
   const { state, actions } = useListUrlState(projectListUrlConfig);
-  const { keyword, setKeyword, clearKeyword } = useSyncedKeyword(state.keyword, actions.setKeyword);
+  const draft = useListFilterDraft(state.keyword, state.filters);
   const query = useMemo(() => buildProjectQuery(state), [state]);
   const listQuery = useProjectList(query);
   const { create, update, remove } = useProjectMutations();
@@ -75,14 +76,24 @@ export default function ProjectListPage() {
   const exportColumns = useMemo(() => createProjectExportColumns(customerNameById), [customerNameById]);
 
   const dateRange = useMemo<[Dayjs | null, Dayjs | null] | null>(() => {
-    const dateFrom = state.filters.dateFrom;
-    const dateTo = state.filters.dateTo;
+    const dateFrom = draft.filters.dateFrom;
+    const dateTo = draft.filters.dateTo;
     if (!dateFrom && !dateTo) return null;
     return [dateFrom ? dayjs(dateFrom) : null, dateTo ? dayjs(dateTo) : null];
-  }, [state.filters.dateFrom, state.filters.dateTo]);
+  }, [draft.filters.dateFrom, draft.filters.dateTo]);
 
   const handleSelectionChange = useCallback((rows: Project[]) => setSelectedRows(rows), []);
   const closeDrawer = useCallback(() => setDrawer(null), []);
+
+  const handleSearch = () => {
+    const values = draft.submit();
+    actions.applyFilters(values.keyword, values.filters);
+  };
+
+  const handleReset = () => {
+    draft.reset();
+    actions.reset();
+  };
 
   const initialValues = useMemo(() => {
     if (drawer?.mode === 'edit') return toProjectFormValues(drawer.project);
@@ -140,15 +151,16 @@ export default function ProjectListPage() {
       dataIndex: 'name',
       key: 'name',
       sorter: true,
-      width: 200,
+      width: 160,
       render: (value: string, record) => <Link to={paths.projectDetail(record.id)}>{value}</Link>,
     },
-    { title: '项目编码', dataIndex: 'code', key: 'code', sorter: true, width: 140 },
+    { title: '项目编码', dataIndex: 'code', key: 'code', sorter: true, width: 120, responsive: ['lg'] },
     {
       title: '关联客户',
       dataIndex: 'customerId',
       key: 'customerId',
-      width: 180,
+      width: 145,
+      responsive: ['lg'],
       render: (_value: string, record) => {
         const customerName = customerNameById.get(record.customerId);
         if (customerName) {
@@ -161,13 +173,13 @@ export default function ProjectListPage() {
         );
       },
     },
-    { title: '负责人', dataIndex: 'owner', key: 'owner', sorter: true, width: 110 },
+    { title: '负责人', dataIndex: 'owner', key: 'owner', sorter: true, width: 95, responsive: ['md'] },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       sorter: true,
-      width: 110,
+      width: 96,
       render: (value: string) => <StatusTag value={value} options={PROJECT_STATUS_OPTIONS} />,
     },
     {
@@ -175,15 +187,17 @@ export default function ProjectListPage() {
       dataIndex: 'progress',
       key: 'progress',
       sorter: true,
-      width: 150,
-      render: (value: number) => <Progress percent={value} size="small" style={{ minWidth: 120 }} />,
+      responsive: ['lg'],
+      width: 115,
+      render: (value: number) => <Progress percent={value} size="small" style={{ minWidth: 100 }} />,
     },
     {
       title: '预算',
       dataIndex: 'budget',
       key: 'budget',
       sorter: true,
-      width: 140,
+      responsive: ['lg'],
+      width: 115,
       align: 'right',
       render: (value: number) => formatCurrency(value),
     },
@@ -192,7 +206,8 @@ export default function ProjectListPage() {
       dataIndex: 'startDate',
       key: 'startDate',
       sorter: true,
-      width: 120,
+      responsive: ['xl'],
+      width: 108,
       render: (value: string) => formatDate(value),
     },
     {
@@ -200,33 +215,26 @@ export default function ProjectListPage() {
       dataIndex: 'endDate',
       key: 'endDate',
       sorter: true,
-      width: 120,
+      responsive: ['xl'],
+      width: 108,
       render: (value: string) => formatDate(value),
     },
     {
       title: '操作',
       key: 'actions',
-      width: 230,
+      width: 112,
       fixed: 'right',
       render: (_value, record) => (
-        <Space size={2}>
-          <Button type="link" size="small" onClick={() => navigate(paths.projectDetail(record.id))}>
-            详情
-          </Button>
-          <Button type="link" size="small" onClick={() => setDrawer({ mode: 'edit', project: record })}>
-            快捷编辑
-          </Button>
-          <Button type="link" size="small" onClick={() => navigate(paths.projectEdit(record.id))}>
-            完整编辑
-          </Button>
-          <ConfirmDelete
-            entityName={record.name}
-            onConfirm={async () => {
-              await remove.mutateAsync(record.id);
-              setSelectionVersion((version) => version + 1);
-            }}
-          />
-        </Space>
+        <RowActions
+          detailTo={paths.projectDetail(record.id)}
+          entityName={record.name}
+          onQuickEdit={() => setDrawer({ mode: 'edit', project: record })}
+          onFullEdit={() => navigate(paths.projectEdit(record.id))}
+          onDelete={async () => {
+            await remove.mutateAsync(record.id);
+            setSelectionVersion((version) => version + 1);
+          }}
+        />
       ),
     },
   ];
@@ -246,7 +254,7 @@ export default function ProjectListPage() {
     <div className="pageStack">
       <PageHeader
         title="项目管理"
-        description="维护项目主数据，跟踪负责人、进度与预算。列表状态会同步到 URL，可刷新、分享或使用浏览器前进/后退。"
+        description="跟踪项目进度、预算与负责人，并维护客户关联。"
         extra={
           <Button type="primary" icon={<Plus size={16} aria-hidden="true" />} onClick={() => setDrawer({ mode: 'create' })}>
             新建项目
@@ -254,20 +262,14 @@ export default function ProjectListPage() {
         }
       />
 
-      <SearchFilterBar
-        onReset={() => {
-          clearKeyword();
-          actions.reset();
-        }}
-      >
+      <SearchFilterBar onSubmit={handleSearch} onReset={handleReset} dirty={draft.dirty}>
         <Input
           allowClear
           prefix={<Search size={15} aria-hidden="true" />}
           placeholder="搜索项目名称、编码、负责人"
           aria-label="搜索项目"
-          style={{ width: 280 }}
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
+          value={draft.keyword}
+          onChange={(event) => draft.setKeyword(event.target.value)}
         />
         <Select
           allowClear
@@ -275,20 +277,18 @@ export default function ProjectListPage() {
           optionFilterProp="label"
           placeholder="关联客户"
           aria-label="按关联客户筛选"
-          style={{ width: 180 }}
-          value={state.filters.customerId}
+          value={draft.filters.customerId}
           options={customerOptions}
           loading={customerOptionsQuery.isPending}
-          onChange={(value) => actions.setFilter('customerId', value)}
+          onChange={(value) => draft.setFilter('customerId', value)}
         />
         <Select
           allowClear
           placeholder="项目状态"
           aria-label="按项目状态筛选"
-          style={{ width: 150 }}
-          value={state.filters.status}
+          value={draft.filters.status}
           options={PROJECT_STATUS_OPTIONS}
-          onChange={(value) => actions.setFilter('status', value)}
+          onChange={(value) => draft.setFilter('status', value)}
         />
         <Select
           allowClear
@@ -296,11 +296,10 @@ export default function ProjectListPage() {
           optionFilterProp="label"
           placeholder="负责人"
           aria-label="按负责人筛选"
-          style={{ width: 150 }}
-          value={state.filters.owner}
+          value={draft.filters.owner}
           options={ownerOptions}
           loading={userOptionsQuery.isPending}
-          onChange={(value) => actions.setFilter('owner', value)}
+          onChange={(value) => draft.setFilter('owner', value)}
         />
         <DatePicker.RangePicker
           format="YYYY-MM-DD"
@@ -308,7 +307,7 @@ export default function ProjectListPage() {
           aria-label="按开始日期范围筛选"
           value={dateRange}
           onChange={(dates) => {
-            actions.setFilters({
+            draft.setFilters({
               dateFrom: dates?.[0] ? dates[0].format('YYYY-MM-DD') : undefined,
               dateTo: dates?.[1] ? dates[1].format('YYYY-MM-DD') : undefined,
             });
@@ -338,7 +337,14 @@ export default function ProjectListPage() {
           loading={listQuery.isFetching}
           selectable
           batchActions={(rows) => (
-            <Button danger size="small" onClick={handleBatchDelete} disabled={rows.length === 0}>
+            <Button
+              type="primary"
+              danger
+              size="small"
+              icon={<Trash2 size={14} aria-hidden="true" />}
+              onClick={handleBatchDelete}
+              disabled={rows.length === 0}
+            >
               批量删除
             </Button>
           )}

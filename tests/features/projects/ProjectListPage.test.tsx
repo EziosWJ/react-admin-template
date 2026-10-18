@@ -23,9 +23,11 @@ describe('ProjectListPage', () => {
     );
 
     expect(await screen.findByText('优选门店数字化', {}, { timeout: 20_000 })).toBeInTheDocument();
-    expect((await screen.findAllByText('星云科技')).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('星云移动端重构')).length).toBeGreaterThan(0);
 
     await chooseSelectOption(user, document, '按项目状态筛选', '进行中');
+    expect(screen.getByTestId('location').textContent).not.toContain('status=in_progress');
+    await user.click(screen.getByRole('button', { name: '查询' }));
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toContain('status=in_progress');
     });

@@ -33,6 +33,7 @@ export default function UserDetailPage() {
           user && (
             <Space wrap>
               <Button
+                type="primary"
                 icon={<Pencil size={15} aria-hidden="true" />}
                 onClick={() => navigate(paths.userEdit(user.id))}
               >

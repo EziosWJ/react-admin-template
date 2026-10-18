@@ -2,10 +2,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { App, Button, DatePicker, Input, Select, Space } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Search, Upload } from 'lucide-react';
+import { Plus, Search, Trash2, Upload } from 'lucide-react';
 import type { TableColumnsType } from 'antd';
-import { ConfirmDelete } from '../../components/ConfirmDelete';
 import { DataTable } from '../../components/DataTable';
+import { RowActions } from '../../components/RowActions';
 import { ExportMenu } from '../../components/ExportMenu';
 import { FormDrawer } from '../../components/FormDrawer';
 import { ImportDrawer } from '../../components/ImportDrawer';
@@ -15,7 +15,8 @@ import { SearchFilterBar } from '../../components/SearchFilterBar';
 import { StatusTag } from '../../components/StatusTag';
 import { ORDER_STATUS_OPTIONS } from '../../config/options';
 import { paths } from '../../config/paths';
-import { useListUrlState, useSyncedKeyword } from '../../hooks/useListUrlState';
+import { useListFilterDraft } from '../../hooks/useListFilterDraft';
+import { useListUrlState } from '../../hooks/useListUrlState';
 import { getApiErrorMessage } from '../../lib/api/errors';
 import type { Order, OrderInput } from '../../types/models';
 import { DATE_FORMAT, formatCurrency, formatDate } from '../../utils/format';
@@ -38,7 +39,7 @@ export default function OrderListPage() {
   const navigate = useNavigate();
   const { message, modal } = App.useApp();
   const { state, actions } = useListUrlState(orderListUrlConfig);
-  const { keyword, setKeyword, clearKeyword } = useSyncedKeyword(state.keyword, actions.setKeyword);
+  const draft = useListFilterDraft(state.keyword, state.filters);
   const query = useMemo(() => buildOrderQuery(state), [state]);
   const listQuery = useOrderList(query);
   const customersQuery = useCustomerOptions();
@@ -77,13 +78,23 @@ export default function OrderListPage() {
     [customerNameById, projectNameById],
   );
   const dateRange = useMemo<[Dayjs | null, Dayjs | null] | null>(() => {
-    const { dateFrom, dateTo } = state.filters;
+    const { dateFrom, dateTo } = draft.filters;
     if (!dateFrom && !dateTo) return null;
     return [dateFrom ? dayjs(dateFrom) : null, dateTo ? dayjs(dateTo) : null];
-  }, [state.filters]);
+  }, [draft.filters]);
 
   const handleSelectionChange = useCallback((rows: Order[]) => setSelectedRows(rows), []);
   const closeDrawer = useCallback(() => setDrawer(null), []);
+
+  const handleSearch = () => {
+    const values = draft.submit();
+    actions.applyFilters(values.keyword, values.filters);
+  };
+
+  const handleReset = () => {
+    draft.reset();
+    actions.reset();
+  };
 
   const initialValues = useMemo(() => {
     if (drawer?.mode === 'edit') return toOrderFormValues(drawer.order);
@@ -139,14 +150,15 @@ export default function OrderListPage() {
       dataIndex: 'orderNo',
       key: 'orderNo',
       sorter: true,
-      width: 160,
+      width: 140,
       render: (value: string, record) => <Link to={paths.orderDetail(record.id)}>{value}</Link>,
     },
     {
       title: '客户',
       dataIndex: 'customerId',
       key: 'customer',
-      width: 170,
+      width: 140,
+      responsive: ['md'],
       ellipsis: true,
       render: (value: string) => {
         const name = customerNameById.get(value);
@@ -157,7 +169,8 @@ export default function OrderListPage() {
     {
       title: '关联项目',
       key: 'project',
-      width: 170,
+      width: 150,
+      responsive: ['lg'],
       ellipsis: true,
       render: (_value, record) => {
         if (!record.projectId) return '未关联项目';
@@ -171,7 +184,8 @@ export default function OrderListPage() {
       dataIndex: 'amount',
       key: 'amount',
       sorter: true,
-      width: 140,
+      responsive: ['md'],
+      width: 110,
       align: 'right',
       render: (value: number) => formatCurrency(value),
     },
@@ -180,7 +194,7 @@ export default function OrderListPage() {
       dataIndex: 'status',
       key: 'status',
       sorter: true,
-      width: 110,
+      width: 96,
       render: (value: string) => <StatusTag value={value} options={ORDER_STATUS_OPTIONS} />,
     },
     {
@@ -188,7 +202,8 @@ export default function OrderListPage() {
       dataIndex: 'orderDate',
       key: 'orderDate',
       sorter: true,
-      width: 120,
+      responsive: ['lg'],
+      width: 104,
       render: (value: string) => formatDate(value),
     },
     {
@@ -196,33 +211,26 @@ export default function OrderListPage() {
       dataIndex: 'dueDate',
       key: 'dueDate',
       sorter: true,
-      width: 120,
+      responsive: ['xl'],
+      width: 104,
       render: (value: string) => formatDate(value),
     },
     {
       title: '操作',
       key: 'actions',
-      width: 240,
+      width: 112,
       fixed: 'right',
       render: (_value, record) => (
-        <Space size={2}>
-          <Button type="link" size="small" onClick={() => navigate(paths.orderDetail(record.id))}>
-            详情
-          </Button>
-          <Button type="link" size="small" onClick={() => setDrawer({ mode: 'edit', order: record })}>
-            快捷编辑
-          </Button>
-          <Button type="link" size="small" onClick={() => navigate(paths.orderEdit(record.id))}>
-            完整编辑
-          </Button>
-          <ConfirmDelete
-            entityName={record.orderNo}
-            onConfirm={async () => {
-              await remove.mutateAsync(record.id);
-              setSelectionVersion((version) => version + 1);
-            }}
-          />
-        </Space>
+        <RowActions
+          detailTo={paths.orderDetail(record.id)}
+          entityName={record.orderNo}
+          onQuickEdit={() => setDrawer({ mode: 'edit', order: record })}
+          onFullEdit={() => navigate(paths.orderEdit(record.id))}
+          onDelete={async () => {
+            await remove.mutateAsync(record.id);
+            setSelectionVersion((version) => version + 1);
+          }}
+        />
       ),
     },
   ];
@@ -242,7 +250,7 @@ export default function OrderListPage() {
     <div className="pageStack">
       <PageHeader
         title="订单管理"
-        description="维护销售订单，关联客户与项目。列表状态会同步到 URL，可刷新、分享或使用浏览器前进/后退。"
+        description="维护销售订单，查看金额、状态与客户/项目关联。"
         extra={
           <Button type="primary" icon={<Plus size={16} aria-hidden="true" />} onClick={() => setDrawer({ mode: 'create' })}>
             新建订单
@@ -250,20 +258,14 @@ export default function OrderListPage() {
         }
       />
 
-      <SearchFilterBar
-        onReset={() => {
-          clearKeyword();
-          actions.reset();
-        }}
-      >
+      <SearchFilterBar onSubmit={handleSearch} onReset={handleReset} dirty={draft.dirty}>
         <Input
           allowClear
           prefix={<Search size={15} aria-hidden="true" />}
           placeholder="搜索订单号或客户"
           aria-label="搜索订单"
-          style={{ width: 260 }}
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
+          value={draft.keyword}
+          onChange={(event) => draft.setKeyword(event.target.value)}
         />
         <Select
           allowClear
@@ -271,30 +273,27 @@ export default function OrderListPage() {
           optionFilterProp="label"
           placeholder="按客户筛选"
           aria-label="按客户筛选"
-          style={{ width: 190 }}
-          value={state.filters.customerId}
+          value={draft.filters.customerId}
           options={customerOptions}
           loading={customersQuery.isPending}
-          onChange={(value) => actions.setFilter('customerId', value)}
+          onChange={(value) => draft.setFilter('customerId', value)}
         />
         <Select
           allowClear
           placeholder="订单状态"
           aria-label="按订单状态筛选"
-          style={{ width: 150 }}
-          value={state.filters.status}
+          value={draft.filters.status}
           options={ORDER_STATUS_OPTIONS}
-          onChange={(value) => actions.setFilter('status', value)}
+          onChange={(value) => draft.setFilter('status', value)}
         />
         <DatePicker.RangePicker
           allowClear
           format={DATE_FORMAT}
           value={dateRange}
-          style={{ width: 260 }}
           aria-label="按下单日期范围筛选"
           placeholder={['下单开始日期', '下单结束日期']}
           onChange={(dates) =>
-            actions.setFilters({
+            draft.setFilters({
               dateFrom: dates?.[0]?.format(DATE_FORMAT),
               dateTo: dates?.[1]?.format(DATE_FORMAT),
             })
@@ -324,7 +323,14 @@ export default function OrderListPage() {
           loading={listQuery.isFetching}
           selectable
           batchActions={(rows) => (
-            <Button danger size="small" onClick={handleBatchDelete} disabled={rows.length === 0}>
+            <Button
+              type="primary"
+              danger
+              size="small"
+              icon={<Trash2 size={14} aria-hidden="true" />}
+              onClick={handleBatchDelete}
+              disabled={rows.length === 0}
+            >
               批量删除
             </Button>
           )}
@@ -338,7 +344,6 @@ export default function OrderListPage() {
           toolbarActions={toolbarActions}
           onRefresh={() => void listQuery.refetch()}
           refreshing={listQuery.isFetching}
-          scrollX={1240}
           emptyDescription="暂无订单数据，可新建订单或调整筛选条件。"
         />
       </QueryState>

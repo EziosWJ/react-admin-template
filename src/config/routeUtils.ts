@@ -82,7 +82,11 @@ export function getActiveMenuPath(pathname: string): string {
 }
 
 export function getTabLabel(pathname: string): string {
-  return findRouteDefinition(pathname)?.route.title ?? '页面';
+  return findRouteDefinition(pathname)?.route.label ?? '页面未找到';
+}
+
+export function getPageTitle(pathname: string): string {
+  return findRouteDefinition(pathname)?.route.title ?? '页面未找到';
 }
 
 export function getTabKey(pathname: string): string {

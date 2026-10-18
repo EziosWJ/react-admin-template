@@ -59,6 +59,17 @@ export function FormDrawer<Values extends object>({
       destroyOnHidden
       maskClosable={!submitting}
       closable={!submitting}
+      styles={{
+        header: {
+          padding: '16px 20px',
+          borderBottom: '1px solid var(--ant-color-border-secondary)',
+        },
+        body: { padding: '20px 20px 8px' },
+        footer: {
+          padding: '12px 20px',
+          borderTop: '1px solid var(--ant-color-border-secondary)',
+        },
+      }}
       footer={
         <Space style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button onClick={onClose} disabled={submitting}>取消</Button>

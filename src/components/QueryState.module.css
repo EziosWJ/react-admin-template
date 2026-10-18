@@ -1,7 +1,7 @@
-.loading {
-  padding: 24px;
-  border: 1px solid var(--ant-color-border-secondary, #e8ebf2);
-  border-radius: 12px;
+.panel {
+  padding: 28px 24px;
+  border: 1px solid var(--ant-color-border-secondary, #e9eef6);
+  border-radius: 16px;
   background: var(--ant-color-bg-container, #fff);
 }
-.empty { margin: 32px 0; }
+.empty { margin: 8px 0; }
