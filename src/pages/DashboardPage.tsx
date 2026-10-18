@@ -36,7 +36,7 @@ export default function DashboardPage() {
           const Icon = item.icon;
           return (
             <Col xs={24} sm={12} xl={6} key={item.title}>
-              <Card className={styles.foundationCard} bordered>
+              <Card className={styles.foundationCard} variant="outlined">
                 <span className={styles.iconWrap}><Icon size={20} /></span>
                 <Typography.Title level={5}>{item.title}</Typography.Title>
                 <Typography.Paragraph type="secondary">{item.description}</Typography.Paragraph>
@@ -50,7 +50,7 @@ export default function DashboardPage() {
         showIcon
         type="info"
         icon={<CheckCircle2 size={18} />}
-        message="业务实现按 Issue 推进"
+        title="业务实现按 Issue 推进"
         description="先完成工程质量门禁、布局和数据层，再实现仪表盘及客户、项目、订单、用户模块。未完成的页面会明确标注，不会伪装成已交付功能。"
       />
     </div>
