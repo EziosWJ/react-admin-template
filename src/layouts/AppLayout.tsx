@@ -196,65 +196,67 @@ export default function AppLayout() {
       )}
 
       <Layout className={styles.main}>
-        <header className={styles.header}>
-          <div className={styles.heading}>
-            {isMobile && (
-              <Button
-                type="text"
-                aria-label="打开导航菜单"
-                icon={<MenuIcon size={20} />}
-                onClick={() => setMobileMenuOpen(true)}
+        <div className={styles.stickyTop}>
+          <header className={styles.header}>
+            <div className={styles.heading}>
+              {isMobile && (
+                <Button
+                  type="text"
+                  aria-label="打开导航菜单"
+                  icon={<MenuIcon size={20} />}
+                  onClick={() => setMobileMenuOpen(true)}
+                />
+              )}
+              {isMobile && <span className={styles.mobileBrandMark}>{appConfig.logoText}</span>}
+              <Breadcrumb
+                className={styles.breadcrumb}
+                items={breadcrumbs.map((item, index) => ({
+                  title:
+                    item.href && index < breadcrumbs.length - 1 ? (
+                      <Link to={item.href}>{item.label}</Link>
+                    ) : (
+                      item.label
+                    ),
+                }))}
               />
-            )}
-            {isMobile && <span className={styles.mobileBrandMark}>{appConfig.logoText}</span>}
-            <Breadcrumb
-              className={styles.breadcrumb}
-              items={breadcrumbs.map((item, index) => ({
-                title:
-                  item.href && index < breadcrumbs.length - 1 ? (
-                    <Link to={item.href}>{item.label}</Link>
-                  ) : (
-                    item.label
-                  ),
-              }))}
-            />
-          </div>
-          <Space size="small">
-            <Tooltip title={themeMode === 'dark' ? '切换浅色主题' : '切换深色主题'}>
-              <Button
-                type="text"
-                aria-label={themeMode === 'dark' ? '切换浅色主题' : '切换深色主题'}
-                icon={themeMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                onClick={toggleTheme}
-              />
-            </Tooltip>
-          </Space>
-        </header>
+            </div>
+            <Space size="small">
+              <Tooltip title={themeMode === 'dark' ? '切换浅色主题' : '切换深色主题'}>
+                <Button
+                  type="text"
+                  aria-label={themeMode === 'dark' ? '切换浅色主题' : '切换深色主题'}
+                  icon={themeMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                  onClick={toggleTheme}
+                />
+              </Tooltip>
+            </Space>
+          </header>
 
-        <div className={styles.tabBar}>
-          <Tabs
-            type="editable-card"
-            hideAdd
-            size="small"
-            activeKey={tabKey}
-            onChange={(key) => {
-              const tab = tabs.find((item) => item.key === key);
-              if (tab) navigate(tab.href);
-            }}
-            onEdit={(targetKey, action) => {
-              if (action === 'remove') handleCloseTab(String(targetKey));
-            }}
-            items={displayTabs.map((tab) => ({
-              key: tab.key,
-              label: tab.label,
-              closable: tab.closable,
-            }))}
-            className={styles.tabs}
-            aria-label="已打开的页面"
-          />
-          <Typography.Text type="secondary" className={styles.tabHint}>
-            页面标签保存在当前浏览器会话中
-          </Typography.Text>
+          <div className={styles.tabBar}>
+            <Tabs
+              type="editable-card"
+              hideAdd
+              size="small"
+              activeKey={tabKey}
+              onChange={(key) => {
+                const tab = tabs.find((item) => item.key === key);
+                if (tab) navigate(tab.href);
+              }}
+              onEdit={(targetKey, action) => {
+                if (action === 'remove') handleCloseTab(String(targetKey));
+              }}
+              items={displayTabs.map((tab) => ({
+                key: tab.key,
+                label: tab.label,
+                closable: tab.closable,
+              }))}
+              className={styles.tabs}
+              aria-label="已打开的页面"
+            />
+            <Typography.Text type="secondary" className={styles.tabHint}>
+              页面标签保存在当前浏览器会话中
+            </Typography.Text>
+          </div>
         </div>
 
         <main className={styles.content}>

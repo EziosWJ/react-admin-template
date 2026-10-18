@@ -58,10 +58,13 @@
   font-size: 12px;
 }
 .main { min-width: 0; }
-.header {
+.stickyTop {
   position: sticky;
   z-index: 20;
   top: 0;
+  background: var(--ant-color-bg-container, #fff);
+}
+.header {
   display: flex;
   min-height: 60px;
   align-items: center;
