@@ -13,7 +13,7 @@ React 19.3、TypeScript、Vite、Ant Design 6、React Router Data Router、TanSt
 3. 将 .env.example 复制为 .env.local，并按需修改环境变量。
 4. 执行 pnpm dev，然后打开终端显示的本地地址。
 
-首次执行 pnpm install 会生成 pnpm-lock.yaml。请在开始业务功能开发前提交该锁文件，后续安装使用 pnpm install --frozen-lockfile。
+仓库已提交 pnpm-lock.yaml。依赖安装使用 pnpm install --frozen-lockfile；依赖变更后需审查并提交锁文件更新。
 
 ## 常用命令
 
