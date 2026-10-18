@@ -1,0 +1,21 @@
+.page { display: grid; gap: 22px; }
+.hero {
+  padding: clamp(22px, 4vw, 40px);
+  border: 1px solid var(--ant-color-border-secondary, #e8eaf0);
+  border-radius: 18px;
+  background: linear-gradient(130deg, var(--ant-color-bg-container, #fff), var(--ant-color-primary-bg, #e6f4ff));
+}
+.hero h2 { margin: 18px 0 10px !important; }
+.heroDescription { max-width: 760px; margin-bottom: 22px !important; color: var(--ant-color-text-secondary, #555); }
+.foundationCard { height: 100%; border-radius: 14px; }
+.foundationCard h5 { margin: 14px 0 8px !important; }
+.foundationCard p { margin-bottom: 0 !important; }
+.iconWrap {
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--ant-color-primary, #1677ff);
+  background: var(--ant-color-primary-bg, #e6f4ff);
+}
