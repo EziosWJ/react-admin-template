@@ -1,9 +1,18 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { App as AntApp, ConfigProvider, theme as antdTheme, type ThemeConfig } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import axios from 'axios';
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { appConfig } from '../config/app.config';
+import { queryClient as defaultQueryClient } from '../lib/queryClient';
+import { AppErrorBoundary } from './AppErrorBoundary';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -13,60 +22,103 @@ interface AppPreferences {
 }
 
 const PreferencesContext = createContext<AppPreferences | null>(null);
+const THEME_STORAGE_KEY = 'app-theme';
 
-function getInitialTheme(): ThemeMode {
-  const stored = window.localStorage.getItem('app-theme');
-  if (stored === 'light' || stored === 'dark') return stored;
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+function getSystemTheme(): ThemeMode {
+  const media = window.matchMedia?.('(prefers-color-scheme: dark)');
+  return media?.matches ? 'dark' : 'light';
 }
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      gcTime: 300_000,
-      retry: (failureCount, error) => {
-        if (axios.isAxiosError(error)) {
-          const status = error.response?.status;
-          if (status !== undefined && status >= 400 && status < 500) return false;
-        }
-        return failureCount < 1;
-      },
-    },
-    mutations: { retry: false },
-  },
-});
+function getStoredTheme(): ThemeMode | null {
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return stored === 'light' || stored === 'dark' ? stored : null;
+  } catch {
+    return null;
+  }
+}
 
-export function AppProviders({ children }: { children: ReactNode }) {
+function getInitialTheme(): ThemeMode {
+  return getStoredTheme() ?? getSystemTheme();
+}
+
+interface AppProvidersProps {
+  children: ReactNode;
+  client?: QueryClient;
+}
+
+export function AppProviders({ children, client = defaultQueryClient }: AppProvidersProps) {
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialTheme);
 
   useEffect(() => {
-    if (window.localStorage.getItem('app-theme') || !window.matchMedia) return;
+    if (getStoredTheme() || !window.matchMedia) return;
     const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = (event: MediaQueryListEvent) => setThemeMode(event.matches ? 'dark' : 'light');
+    const onChange = (event: MediaQueryListEvent) => {
+      if (!getStoredTheme()) setThemeMode(event.matches ? 'dark' : 'light');
+    };
     media.addEventListener?.('change', onChange);
     return () => media.removeEventListener?.('change', onChange);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = themeMode;
+    document.documentElement.style.colorScheme = themeMode;
+  }, [themeMode]);
+
   const toggleTheme = useCallback(() => {
     setThemeMode((current) => {
-      const next = current === 'dark' ? 'light' : 'dark';
-      window.localStorage.setItem('app-theme', next);
+      const next: ThemeMode = current === 'dark' ? 'light' : 'dark';
+      try {
+        window.localStorage.setItem(THEME_STORAGE_KEY, next);
+      } catch {
+        // 存储不可用时仍允许本次会话切换主题。
+      }
       return next;
     });
   }, []);
 
   const preferences = useMemo(() => ({ themeMode, toggleTheme }), [themeMode, toggleTheme]);
-  const themeConfig: ThemeConfig = {
-    algorithm: themeMode === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
-    token: { colorPrimary: appConfig.brandColor, borderRadius: 8 },
-  };
+
+  const themeConfig: ThemeConfig = useMemo(
+    () => ({
+      algorithm: themeMode === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+      cssVar: { prefix: 'ant' },
+      token: {
+        colorPrimary: appConfig.brandColor,
+        borderRadius: 8,
+        fontFamily:
+          'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif',
+        colorBgLayout: themeMode === 'dark' ? '#0b1220' : '#f4f7fb',
+      },
+      components: {
+        Layout: {
+          headerBg: themeMode === 'dark' ? '#111827' : '#ffffff',
+          siderBg: themeMode === 'dark' ? '#0f172a' : '#ffffff',
+          bodyBg: themeMode === 'dark' ? '#0b1220' : '#f4f7fb',
+          footerBg: 'transparent',
+        },
+        Menu: {
+          itemBorderRadius: 8,
+          itemMarginInline: 8,
+        },
+        Table: {
+          headerBg: themeMode === 'dark' ? '#141d2e' : '#f7f9fc',
+        },
+        Card: {
+          borderRadiusLG: 14,
+        },
+      },
+    }),
+    [themeMode],
+  );
 
   return (
     <PreferencesContext.Provider value={preferences}>
-      <QueryClientProvider client={queryClient}>
-        <ConfigProvider locale={zhCN} theme={themeConfig}>
-          <AntApp>{children}</AntApp>
+      <QueryClientProvider client={client}>
+        <ConfigProvider locale={zhCN} theme={themeConfig} button={{ autoInsertSpace: false }}>
+          <AntApp>
+            <AppErrorBoundary>{children}</AppErrorBoundary>
+          </AntApp>
         </ConfigProvider>
       </QueryClientProvider>
     </PreferencesContext.Provider>

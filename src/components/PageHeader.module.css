@@ -1,0 +1,16 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.heading { min-width: 0; }
+.back { margin: 0 0 6px -6px !important; color: var(--ant-color-text-secondary, #5c6470); }
+.title { margin: 0 0 4px !important; font-size: clamp(20px, 2.4vw, 26px) !important; }
+.description { max-width: 860px; margin: 4px 0 0 !important; }
+.extra { flex-shrink: 0; }
+@media (max-width: 767px) {
+  .header { flex-direction: column; }
+  .extra { width: 100%; }
+  .extra > * { flex: 1; }
+}

@@ -1,0 +1,26 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--ant-color-border-secondary, #e8ebf2);
+  border-radius: 12px;
+  background: var(--ant-color-bg-container, #fff);
+}
+.fields {
+  display: flex;
+  flex: 1 1 620px;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+}
+.fields > * { flex: 0 1 auto; }
+.actions { flex: 0 0 auto; }
+@media (max-width: 767px) {
+  .bar { padding: 12px; }
+  .fields, .fields > * { width: 100%; flex-basis: 100%; }
+  .actions { width: 100%; }
+  .actions > * { flex: 1; }
+}

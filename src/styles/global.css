@@ -1,5 +1,6 @@
 * { box-sizing: border-box; }
-html { min-width: 320px; min-height: 100%; }
+html { min-width: 320px; min-height: 100%; background: #f4f7fb; }
+html[data-theme='dark'] { background: #0b1220; }
 body {
   min-width: 320px;
   min-height: 100vh;
@@ -12,6 +13,7 @@ button, input, textarea, select { font: inherit; }
 a { color: inherit; }
 :focus-visible { outline: 2px solid var(--ant-color-primary, #1677ff); outline-offset: 3px; }
 #root { min-height: 100vh; }
+.pageStack { display: grid; gap: 18px; }
 .routeLoading {
   display: flex;
   min-height: 240px;
@@ -21,3 +23,4 @@ a { color: inherit; }
   gap: 12px;
   color: var(--ant-color-text-secondary, #777);
 }
+input[type='search']::-webkit-search-cancel-button { cursor: pointer; }

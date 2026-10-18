@@ -1,54 +1,61 @@
-import { lazy, Suspense } from 'react';
-import { Button, Result, Spin } from 'antd';
-import { createBrowserRouter, RouterProvider, isRouteErrorResponse, useNavigate, useRouteError, type RouteObject } from 'react-router-dom';
+import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
+import { Spin } from 'antd';
+import { createBrowserRouter, RouterProvider, type RouteObject } from 'react-router-dom';
 import { env } from '../config/env';
-import { routeDefinitions } from '../config/routes';
+import { routeDefinitions, type AppRouteDefinition } from '../config/routes';
 import AppLayout from '../layouts/AppLayout';
 
-const NotFoundPage = lazy(() => import('../pages/PlaceholderPage').then(({ default: Page }) => ({
-  default: () => <Page title="页面未找到" description="当前地址没有对应的页面，请从导航中选择有效入口。" />,
-})));
+const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
+const RouteErrorPage = lazy(() => import('../pages/RouteErrorPage'));
 
-function RouteErrorPage() {
-  const error = useRouteError();
-  const navigate = useNavigate();
-  const status = isRouteErrorResponse(error) ? error.status : 500;
-  const notFound = status === 404;
-
+function PageFallback() {
   return (
-    <Result
-      status={notFound ? '404' : '500'}
-      title={notFound ? '页面不存在' : '页面加载失败'}
-      subTitle={notFound ? '请检查地址，或返回应用首页。' : '页面遇到问题。请重试或返回首页；生产环境不会展示内部堆栈。'}
-      extra={<Button type="primary" onClick={() => navigate('/')}>返回首页</Button>}
-    />
+    <div className="routeLoading" aria-live="polite" aria-busy="true">
+      <Spin size="large" />
+      <span>页面加载中…</span>
+    </div>
   );
 }
 
-const children: RouteObject[] = routeDefinitions.map((route) => {
-  const Page = route.component;
-  const element = (
-    <Suspense fallback={<div className="routeLoading"><Spin size="large" /><span>页面加载中…</span></div>}>
-      <Page />
+function lazyElement(Component: ComponentType): ReactNode {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <Component />
     </Suspense>
   );
-  const handle = { title: route.title, breadcrumb: route.label };
+}
 
-  return route.path === '/'
-    ? { index: true, element, handle }
-    : { path: route.path.replace(/^\//, ''), element, handle };
-});
+function toRouteObject(definition: AppRouteDefinition): RouteObject {
+  const element = lazyElement(definition.component);
+  if (definition.path === '/') {
+    return { index: true, element };
+  }
+  return {
+    path: definition.path.replace(/^\//, ''),
+    element,
+    handle: { title: definition.title, label: definition.label },
+  };
+}
 
-const router = createBrowserRouter(
-  [{
-    path: '/',
-    element: <AppLayout />,
-    errorElement: <RouteErrorPage />,
-    children: [...children, { path: '*', element: <Suspense fallback={<div className="routeLoading"><Spin size="large" /></div>}><NotFoundPage /></Suspense> }],
-  }],
-  { basename: env.basePath === '/' ? undefined : env.basePath },
-);
+export function createAppRouter() {
+  return createBrowserRouter(
+    [
+      {
+        path: '/',
+        element: <AppLayout />,
+        errorElement: lazyElement(RouteErrorPage),
+        children: [
+          ...routeDefinitions.map(toRouteObject),
+          { path: '*', element: lazyElement(NotFoundPage) },
+        ],
+      },
+    ],
+    { basename: env.basePath === '/' ? undefined : env.basePath },
+  );
+}
+
+const appRouter = createAppRouter();
 
 export function AppRouter() {
-  return <RouterProvider router={router} />;
+  return <RouterProvider router={appRouter} />;
 }
