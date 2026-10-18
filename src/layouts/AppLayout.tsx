@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  App as AntApp,
   Breadcrumb,
   Button,
   Drawer,
