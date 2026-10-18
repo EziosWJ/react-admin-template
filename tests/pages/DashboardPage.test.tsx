@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import DashboardPage from '../../src/pages/DashboardPage';
 
