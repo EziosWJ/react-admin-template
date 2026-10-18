@@ -41,7 +41,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialTheme);
 
   useEffect(() => {
-    if (window.localStorage.getItem('app-theme')) return;
+    if (window.localStorage.getItem('app-theme') || !window.matchMedia) return;
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const onChange = (event: MediaQueryListEvent) => setThemeMode(event.matches ? 'dark' : 'light');
     media.addEventListener?.('change', onChange);
