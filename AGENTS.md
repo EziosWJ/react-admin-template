@@ -4,9 +4,15 @@
 本仓库是独立的 React + TypeScript 企业管理后台脚手架，采用侧边栏布局。所有业务均为前端演示与 MSW 内存模拟，不接入真实后端、登录认证或权限系统。
 
 ## 开发前必须阅读
-1. `README.md`：安装、命令、环境变量和项目结构。
-2. 本文件：架构边界、编码约定和验收要求。
-3. 对应 GitHub Issue：需求范围与逐条验收标准。
+1. 根目录 README.md：安装、命令、环境变量和当前功能。
+2. 本文件：架构边界、编码约定和执行限制。
+3. docs/README.md：正式文档索引与决策优先级。
+4. 与任务相关的 docs/spec/：产品范围、功能行为和可验证要求。
+5. 与任务相关的 docs/adr/：已接受的技术决策。
+6. docs/acceptance.md：交付验收清单。
+7. 对应 GitHub Issue：具体任务范围与补充验收条件。
+
+若 Issue/Prompt 与已确认决策、SPEC 或 Accepted ADR 冲突，必须先报告冲突；不得擅自选择较方便的实现，也不得修改规范以迁就当前代码。
 
 ## 技术基线
 - React 19.3、TypeScript、Vite、pnpm。
@@ -64,3 +70,11 @@
 - 不添加真实后端、认证/授权、Docker 或 Nginx 部署配置。
 - 版本更新必须检查 React、Ant Design、React Router、Ant Design Charts、测试工具之间的兼容性，并提交更新后的 `pnpm-lock.yaml`。
 - 若 Issue 与现有已确认决策冲突，优先遵守本文件和正式 SPEC/ADR，并在 Issue 中说明，不得擅自改动架构决策。
+
+
+## 正式规范文档与决策治理
+- docs/spec/ 是产品与功能行为的规范来源；docs/adr/ 记录技术路线和架构边界；docs/acceptance.md 定义可验证交付条件。
+- 新功能先更新 SPEC 和验收项，再实施；改变技术路线、数据流、状态归属或公共组件契约时必须更新 ADR。
+- 已确认决策、Accepted ADR 和 SPEC 不得被临时 Issue/Prompt 覆盖。冲突应显式报告并等待决策，不得默默更改范围。
+- 文档与实现有差距时，保留差距并创建实现任务；不得降低验收标准或声称未执行的测试已经通过。
+- 本仓库独立维护文档和代码，不依赖另一模板仓库的文档、代码包、workspace、submodule 或运行时依赖。

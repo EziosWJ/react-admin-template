@@ -130,7 +130,7 @@ MSW 在开发环境默认启用，生产构建默认关闭；关闭时不会启�
 
 - 刷新、复制链接、浏览器前进/后退可恢复相同查询。
 - 非法页码、页大小、排序字段、枚举筛选和日期会被忽略并回退到默认值。
-- 关键词输入使用防抖并替换当前历史记录，避免每次按键产生历史条目；筛选、排序和分页使用正常历史记录。
+- 关键词与筛选项先作为草稿；点击“查询”或按 Enter 后一次性提交，只有已提交值写入 URL 并触发请求。重置恢复默认条件并重新查询；排序、分页和页大小按列表规范同步 URL。
 - 重置筛选只清理列表相关参数，保留无关 query 参数。
 - TanStack Query key 与规范化后的查询参数保持一致；Zustand 不保存任何服务端数据或可由 URL 表达的列表状态。
 
@@ -191,3 +191,20 @@ Chrome、Edge、Firefox、Safari 当前及最近两个主要版本；不支持 I
 - 两个模板仓库完全独立，不使用对方的代码、私有包、workspace、submodule 或运行时依赖。
 
 如后续接入真实 API，只需替换 `VITE_API_BASE_URL`、关闭 `VITE_ENABLE_MSW`，并在保留统一类型、错误处理和 Query key 约定的前提下替换 `src/features/*/api.ts` 的实现。
+
+
+## 正式文档基线
+
+本仓库以 docs/ 中的正式规范作为后续开发与验收依据：
+
+- [文档索引](docs/README.md)
+- [产品范围 SPEC](docs/spec/0001-product-scope.md)
+- [业务模型与 API SPEC](docs/spec/0002-domain-and-api.md)
+- [列表状态与 DataTable SPEC](docs/spec/0003-list-query-and-datatable.md)
+- [UI 与无障碍 SPEC](docs/spec/0004-ui-and-accessibility.md)
+- [质量与验收 SPEC](docs/spec/0005-quality-and-acceptance.md)
+- [架构说明](docs/architecture.md)
+- [交付验收清单](docs/acceptance.md)
+- [ADR 决策记录](docs/adr/)
+
+当 README、Issue、Prompt 或当前实现与已确认决策、SPEC 或 Accepted ADR 冲突时，不得擅自改变规范；应记录差距并按正式文档修复实现。
